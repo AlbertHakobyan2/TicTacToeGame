@@ -1,6 +1,16 @@
 let reader = require('readline-sync');
 module.exports = tictactoe = {
-  execCount: 0,
+           gameRules: '\n'+"                      Welcome to TicTacToe Game" + 
+      '\n'+'\n' +       "   The rules are simple: One player plays as X, the other as O. "  + "X always starts first" +
+      '\n'+'\n' +       "1. The player should Insert a number for the position he wants his sign to be placed." + 
+      '\n'+'\n' +       "2. The input for the position should be in a merged row and column index combination" + '\n' + 
+                        "   i.e : 12, // 1 for the row, 2 for the column you want.)" +
+      '\n'+'\n' +       "3. After the input, one must wait for the other player to make his input, unless the game stops." +
+      '\n'+'\n' +       "4. If any of the players gets a chance to collect" + 
+                        "3 of his signs in any of the column,  row or diagonal - HE WINS."+ 
+      '\n'+'\n' +       "                            Good Luck!" + '\n', 
+
+  stepCounter: 0,
   startx: 0,
   starto: 0,
   checkwin: false,
@@ -23,12 +33,13 @@ module.exports = tictactoe = {
 
             InsertX: function (){
               if (this.startx === 0 && this.checkers.checkWin(this.xoboard) == false){
-                this.execCount++;
-                this.checkers.tieCondition(this.execCount);
-                    let positionkeeperX = reader.question("You play as: " + "X, " + "Please insert Your Position" +"'xy'" + "for it (from 1-3): ");
-                    if (this.checkers.inputcheck(positionkeeperX)!=true){       
-                       console.log("told you what to do you stupid (x and y from 1-3)");
-                       tictactoe.execCount = tictactoe.execCount - 1; 
+                this.stepCounter++;
+                this.checkers.tieCondition(this.stepCount);
+                    let positionkeeperX = reader.question("You are player: X," + 
+                    "Please insert Your Position for it: ");
+                    if (!this.checkers.inputcheck(positionkeeperX)){       
+                       console.log("Rule 2 was very simple to remember (x and y from 1-3)");
+                       tictactoe.stepCount = tictactoe.stepCount - 1;  //normalizes the stepcounter
                        return this.InsertX();
                 }else if (this.checkers.inputcheck(positionkeeperX)){
                        if(this.checkers.positionBusy(this.xoboard, positionkeeperX)){
@@ -44,19 +55,20 @@ module.exports = tictactoe = {
                               } 
                             }
                 } else if (this.startx ===0 && this.checkers.checkWin(this.xoboard) == true){ 
-                         console.log("krec O");
+                         console.log("           Congratulations! Player O Won this time" + '\n');
                          this.checkers.playAgain();
                   } else return this.xoboard;
             },
             
             InsertO: function (mat){
               if (this.starto === 0 && this.checkers.checkWin(this.xoboard) === false){ 
-                this.execCount++;
-                this.checkers.tieCondition(this.execCount);
-                  let positionkeeperO = reader.question("You play as: " + "O, " + "Please insert Your Position" +"'xy'" + "for it: ");  
-                  if (this.checkers.inputcheck(positionkeeperO)!=true){
-                      console.log("told you what to do you stupid (x and y from 1-3)");
-                      tictactoe.execCount = tictactoe.execCount - 1; 
+                this.stepCounter++;
+                this.checkers.tieCondition(this.stepCounter);
+                  let positionkeeperO = reader.question("You are player: O," + '\n' +
+                   "Please insert Your Position for it: ");  
+                  if (!this.checkers.inputcheck(positionkeeperO)){
+                      console.log("Rule 2 was very simple to remember (x and y from 1-3)");
+                      tictactoe.stepCounter = tictactoe.stepCounter - 1; 
                       return this.InsertO(mat);
                 } else if (this.checkers.inputcheck(positionkeeperO)){
                        if(this.checkers.positionBusy(this.xoboard, positionkeeperO)){
@@ -74,7 +86,7 @@ module.exports = tictactoe = {
                           }  
                         } 
                   } else if (this.checkers.checkWin(this.xoboard) == true){ 
-                           console.log(" X Won This Time ");
+                           console.log("           Congratulations! player X Won This Time " + '\n');
                            this.checkers.playAgain(); 
                     }else return mat;
                   },
@@ -84,11 +96,60 @@ module.exports = tictactoe = {
                     normalMat: [[],[],[]],
                     coltoRow:  [[],[],[]],
                     
+                    
+                    rangeCheck: function (elem1, elem2){
+                      return ((elem1 > 0 && elem1 < 4) && (elem2 > 0 && elem2 < 4));
+              },
+              
+              inputcheck: function(num){
+                if (num.length==2 && this.rangeCheck(num[0], num[1])){
+                  return true;
+                }else if (num.length!=2 || this.rangeCheck(num[0], num[1])==false){ 
+                  console.log("number out of range");  
+                  return false;
+                }
+              },
+              
+              positionBusy:function (mat, pk){
+
+                if ((mat[pk[0]-1][pk[1]-1]=="X")||((mat[pk[0]-1][pk[1]-1]=="O"))){
+                  tictactoe.stepCounter = tictactoe.stepCounter - 1;
+                  console.log('\n' +"The position is occupied by: " + mat[pk[0]-1][pk[1]-1] +
+                  ". Choose x and y, each from 1-3" + '\n');
+                  return true;
+                } else return false;
+              },
+              
+              checkWin: function(mat) { 
+                let win = false;
+                for (let i = 0; i < mat.length; i++){
+                  if (this.rowWin(i, mat) || this.colWin(i, mat) || this.diagcheck(i, mat)){
+                    win = true; break;
+                  } else if (!this.rowWin(i, mat) && !this.colWin(i, mat)&& !this.diagcheck(i, mat)){
+                    win = false;
+                  }                                                          
+                } return win; 
+              },
+              
+              wincheckX: function(str){
+                return ((str === "X")) 
+              },
+              wincheckO: function(str){
+                return str === "O"; 
+              },
+
+              tieCondition: function(steps){
+                if (steps == 10){
+                  console.log("\n" + "TIE" + "\n");
+                  return this.playAgain();
+                } 
+              },
+
               playAgain: function () {
-                let again = reader.question("Game is Over. Do you want to star over? (yes or no): ");
+                let again = reader.question("Game is Over. Do you want to start over? (yes or no): ");
                 let mat;
                 if (again == "yes") {
-                  tictactoe.execCount = 0;
+                  tictactoe.stepCounter = 0;
                   mat = [   
                      ["_","_","_"],
                      ["_","_","_"],
@@ -104,35 +165,6 @@ module.exports = tictactoe = {
                     }
                },
               
-              rangeCheck: function (elem1, elem2){
-                return ((elem1 > 0 && elem1 < 4) && (elem2 > 0 && elem2 < 4));
-              },
-              
-              inputcheck: function(num){
-                if (num.length==2 && this.rangeCheck(num[0], num[1])){
-                  return true;
-                }else if (num.length!=2 || this.rangeCheck(num[0], num[1])==false){ 
-                  console.log("number out of range");  
-                  return false;
-                }
-              },
-              
-              positionBusy:function (mat, pk){
-                if ((mat[pk[0]-1][pk[1]-1]=="X")||((mat[pk[0]-1][pk[1]-1]=="O"))){
-                  tictactoe.execCount = tictactoe.execCount - 1;
-                  console.log('\n' +"The position is occupied by: " + mat[pk[0]-1][pk[1]-1] +". Choose x and y, each from 1-3" + '\n');
-                  return true;
-                } else return false;
-              },
-              
-              wincheckX: function(str){
-                 return ((str === "X")) 
-              },
-              wincheckO: function(str){
-                return str === "O"; 
-             },
-              
-             
              
              backToNormal: function (mat){             
                  for(let i = 0; i < mat.length; i++){
@@ -192,24 +224,7 @@ module.exports = tictactoe = {
                     }
                 } 
                   return (this.diagXOcheck(x, diag1) || this.diagXOcheck(x, diag2));
-               },
-              checkWin: function(mat) { 
-                let win = false;
-                for (let i = 0; i < mat.length; i++){
-                  if (this.rowWin(i, mat) || this.colWin(i, mat) || this.diagcheck(i, mat)){
-                    win = true; break;
-                  } else if (!this.rowWin(i, mat) && !this.colWin(i, mat)&& !this.diagcheck(i, mat)){
-                    win = false;
-                  }                                                          
-                } return win; 
-              },
-
-              tieCondition: function(steps){
-                if (steps == 10){
-                console.log("\n" + "TIE" + "\n");
-                  return this.playAgain();
-                } 
-              }
+               }
            }
 }
                 
